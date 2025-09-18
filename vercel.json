@@ -3,5 +3,6 @@
     "api/**": {
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
-  }
+  },
+  "buildCommand": "uv export --without-hashes --without-urls > requirements.txt"
 }
