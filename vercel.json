@@ -1,16 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.11"
-    },
     "api/**": {
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
-  },
-  "buildCommand": "pnpm install && pnpm build && python3 -m pip install uv && python3 -m uv pip install fastapi uvicorn pydantic --target /build",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
+  }
 }
