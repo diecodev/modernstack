@@ -1,10 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/**": {
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
   },
-  "buildCommand": "python3 -m pip install uv && python3 -m uv pip install . --target /build",
+  "buildCommand": "python3 -m pip install uv && python3 -m uv pip install ./api --target /build",
   "rewrites": [
     {
       "source": "/(.*)",
