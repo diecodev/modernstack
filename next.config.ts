@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   experimental: {
     reactCompiler: true,
   },
-  distDirectory: "public",
   rewrites: async () => {
     return [
       {
