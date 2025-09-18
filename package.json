@@ -9,6 +9,13 @@
     "start": "next start",
     "lint": "ultracite fix --unsafe"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
+      "esbuild",
+      "sharp"
+    ]
+  },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
