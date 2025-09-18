@@ -4,5 +4,5 @@
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
   },
-  "buildCommand": "uv export --without-hashes --without-urls > requirements.txt"
+  "buildCommand": "python3 -m pip install uv && uv export --without-hashes --without-urls > requirements.txt"
 }
