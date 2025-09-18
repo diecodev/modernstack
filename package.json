@@ -6,7 +6,6 @@
     "fastapi-dev": "uv sync --project api && uv run --project api fastapi dev api/index.py",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
-    "build": "next build --turbopack",
     "start": "next start",
     "lint": "ultracite fix --unsafe"
   },

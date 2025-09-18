@@ -5,11 +5,5 @@
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
   },
-  "buildCommand": "python3 -m pip install uv && python3 -m uv pip install ./api --target /build",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api"
-    }
-  ]
+  "buildCommand": "python3 -m pip install uv && python3 -m uv pip install ./api --target /build && next build --turbopack"
 }
