@@ -3,12 +3,24 @@
   "extends": ["ultracite"],
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!app", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!app",
+      "!.next",
+      "!dist",
+      "!build",
+      "!utils/auth-schema.ts"
+    ]
   },
   "linter": {
     "domains": {
       "next": "recommended",
       "react": "recommended"
+    },
+    "rules": {
+      "performance": {
+        "noNamespaceImport": "off"
+      }
     }
   }
 }

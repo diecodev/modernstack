@@ -5,8 +5,13 @@ const nextConfig: NextConfig = {
   experimental: {
     reactCompiler: true,
   },
+  typedRoutes: true,
   rewrites: async () => {
     return [
+      {
+        source: "/api/auth/:path*",
+        destination: "/api/auth/:path*",
+      },
       {
         source: "/api/:path*",
         destination:
