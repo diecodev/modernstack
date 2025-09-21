@@ -15,7 +15,7 @@ const unresolvedBracketsRegex = /\[|\]/;
 
 function buildDynamicHref<H extends _Href>(
   pattern: H,
-  params: ParamMap[H],
+  params: ParamMap[H]
 ): string {
   if (!params || Object.keys(params as object).length === 0) {
     return pattern as string;
@@ -28,7 +28,7 @@ function buildDynamicHref<H extends _Href>(
       if (dots) {
         if (!Array.isArray(value)) {
           throw new Error(
-            `Expected catch-all param "${name}" to be string[] for route ${pattern}`,
+            `Expected catch-all param "${name}" to be string[] for route ${pattern}`
           );
         }
         if (value.length === 0) {
@@ -42,16 +42,16 @@ function buildDynamicHref<H extends _Href>(
         return match;
       }
       return encodeURIComponent(String(value));
-    },
+    }
   );
   if (missing.length > 0) {
     throw new Error(
-      `Missing required route param(s): ${missing.join(", ")} for pattern ${pattern}`,
+      `Missing required route param(s): ${missing.join(", ")} for pattern ${pattern}`
     );
   }
   if (unresolvedBracketsRegex.test(result)) {
     throw new Error(
-      `Unresolved dynamic segment(s) remain in built href: ${result}`,
+      `Unresolved dynamic segment(s) remain in built href: ${result}`
     );
   }
   return result;
