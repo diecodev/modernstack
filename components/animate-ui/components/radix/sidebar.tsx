@@ -539,9 +539,9 @@ const sidebarMenuButtonActiveVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-sidebar-accent text-sidebar-accent-foreground",
+        default: "bg-sidebar-accent/50 text-sidebar-accent-foreground",
         outline:
-          "bg-sidebar-accent text-sidebar-accent-foreground shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+          "bg-sidebar-accent/50 text-sidebar-accent-foreground shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
     },
     defaultVariants: {

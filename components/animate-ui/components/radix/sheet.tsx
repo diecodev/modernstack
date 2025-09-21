@@ -74,6 +74,7 @@ function SheetContent({
           side === "bottom" && "h-[350px] w-full border-t",
           className
         )}
+        side={side}
         {...props}
       >
         {children}
