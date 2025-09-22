@@ -8,6 +8,7 @@ const envSchema = v.object({
   GITHUB_CLIENT_ID: v.string(),
   GITHUB_CLIENT_SECRET: v.string(),
   COOKIE_PREFIX: v.string(),
+  NEXT_PUBLIC_PY_API_SECRET: v.string(),
 });
 
 export const parsedEnv = v.parse(envSchema, process.env);
