@@ -19,7 +19,7 @@ const unresolvedBracketsRegex = /\[|\]/;
 
 function buildDynamicHref(
   pattern: string,
-  params: Record<string, unknown> | undefined,
+  params: Record<string, unknown> | undefined
 ): string {
   if (!params || Object.keys(params).length === 0) {
     return pattern;
@@ -32,7 +32,7 @@ function buildDynamicHref(
       if (dots) {
         if (!Array.isArray(value)) {
           throw new Error(
-            `Expected catch-all param "${name}" to be string[] for route ${pattern}`,
+            `Expected catch-all param "${name}" to be string[] for route ${pattern}`
           );
         }
         if (value.length === 0) {
@@ -46,16 +46,16 @@ function buildDynamicHref(
         return match;
       }
       return encodeURIComponent(String(value));
-    },
+    }
   );
   if (missing.length > 0) {
     throw new Error(
-      `Missing required route param(s): ${missing.join(", ")} for pattern ${pattern}`,
+      `Missing required route param(s): ${missing.join(", ")} for pattern ${pattern}`
     );
   }
   if (unresolvedBracketsRegex.test(result)) {
     throw new Error(
-      `Unresolved dynamic segment(s) remain in built href: ${result}`,
+      `Unresolved dynamic segment(s) remain in built href: ${result}`
     );
   }
   return result;
@@ -65,7 +65,7 @@ function buildDynamicHref(
 type PushWithParamsFn = {
   <H extends HrefsWithParams>(
     href: H,
-    options: NavOptions & { readonly params: ParamMap[H] },
+    options: NavOptions & { readonly params: ParamMap[H] }
   ): void;
   (href: HrefsWithoutParams, options?: NavOptions): void;
 };
@@ -73,7 +73,7 @@ type PushWithParamsFn = {
 type ReplaceWithParamsFn = {
   <H extends HrefsWithParams>(
     href: H,
-    options: NavOptions & { readonly params: ParamMap[H] },
+    options: NavOptions & { readonly params: ParamMap[H] }
   ): void;
   (href: HrefsWithoutParams, options?: NavOptions): void;
 };
@@ -81,7 +81,7 @@ type ReplaceWithParamsFn = {
 type PrefetchWithParamsFn = {
   <H extends HrefsWithParams>(
     href: H,
-    options: { readonly params: ParamMap[H] },
+    options: { readonly params: ParamMap[H] }
   ): Promise<void> | void;
   (href: HrefsWithoutParams, options?: undefined): Promise<void> | void;
 };
@@ -113,7 +113,7 @@ export function useTypedRouter(): TypedRouter {
 
   const push: PushWithParamsFn = (
     href: string,
-    options?: NavOptions & { params?: Record<string, unknown> },
+    options?: NavOptions & { params?: Record<string, unknown> }
   ) => {
     const built = buildDynamicHref(href, options?.params);
     const { params: _ignore, ...nav } = options ?? {};
@@ -122,7 +122,7 @@ export function useTypedRouter(): TypedRouter {
 
   const replace: ReplaceWithParamsFn = (
     href: string,
-    options?: NavOptions & { params?: Record<string, unknown> },
+    options?: NavOptions & { params?: Record<string, unknown> }
   ) => {
     const built = buildDynamicHref(href, options?.params);
     const { params: _ignore, ...nav } = options ?? {};
@@ -131,7 +131,7 @@ export function useTypedRouter(): TypedRouter {
 
   const prefetch: PrefetchWithParamsFn = (
     href: string,
-    options?: { params?: Record<string, unknown> },
+    options?: { params?: Record<string, unknown> }
   ) => {
     const built = buildDynamicHref(href, options?.params);
     return r.prefetch(built as never);
