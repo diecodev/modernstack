@@ -5,11 +5,10 @@ import {
 } from "@/components/animate-ui/components/radix/sidebar";
 import { AppSidebar } from "./components/sidebar";
 
-export default async function OrganizationLayout({
+export default function OrganizationLayout({
   children,
-  params,
 }: LayoutProps<"/o/[org-slug]">) {
-  const { "org-slug": orgSlug } = await params;
+  // const { "org-slug": orgSlug } = await params;
 
   return (
     <SidebarProvider>

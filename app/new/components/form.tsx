@@ -68,7 +68,7 @@ const handleOrganizationSubmit = async (value: TOrganizationSchema) => {
   const response = await authClient.organization.create({
     name: value.name,
     slug: value.slug,
-    keepCurrentActiveOrganization: !!data?.data?.session.activeOrganizationId,
+    keepCurrentActiveOrganization: false,
     userId: data?.data?.session.userId,
   });
 
@@ -104,8 +104,8 @@ export function NewOrganizationForm({
 
         await authClient.getSession({ query: { disableCookieCache: true } });
 
-        return router.replace("/o/[orgSlug]", {
-          params: { orgSlug: response.slug },
+        return router.replace("/o/[org-slug]", {
+          params: { "org-slug": response.slug },
         });
       },
     },

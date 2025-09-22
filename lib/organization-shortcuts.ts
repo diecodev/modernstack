@@ -1,3 +1,4 @@
+import type { TypedRouter } from "@/hooks/use-typed-router";
 import { authClient } from "@/utils/auth-client";
 
 // Keyboard shortcut support: Cmd/Ctrl + 1..9 (and Numpad1..9)
@@ -59,10 +60,14 @@ function indexFromEvent(e: KeyboardEvent): number | null {
  * Cmd/Ctrl + [1..9] based on the provided teams list.
  * Returns a cleanup function to remove the listener.
  */
-export function setupOrganizationShortcuts(
-  teams: Array<{ id: string }> | null | undefined
-): () => void {
-  const onKeyDown = (e: KeyboardEvent) => {
+export function setupOrganizationShortcuts({
+  router,
+  teams,
+}: {
+  teams: Array<{ id: string; slug: string }> | null | undefined;
+  router: TypedRouter;
+}) {
+  const onKeyDown = async (e: KeyboardEvent) => {
     const idx = indexFromEvent(e);
     if (idx === null) {
       return;
@@ -77,9 +82,13 @@ export function setupOrganizationShortcuts(
     e.preventDefault();
     e.stopPropagation();
 
-    authClient.organization
+    await authClient.organization
       .setActive({ organizationId: org.id })
       .catch(() => null);
+
+    // change the location to the new org slug
+    router.push("/o/[org-slug]", { params: { "org-slug": org.slug } });
+    router.refresh();
   };
 
   window.addEventListener("keydown", onKeyDown);
