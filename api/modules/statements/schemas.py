@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from beanie import PydanticObjectId
 from datetime import datetime
 from modules.statements.enums import StatementStatus, TransactionType
@@ -32,6 +32,36 @@ class StatementAiProcessing(BaseModel):
     current_balance: Optional[float] = None
     previous_balance: Optional[float] = None
     transactions: List[TransactionAiProcessing]
+
+    @field_validator("transactions", mode="before")
+    @classmethod
+    def filter_invalid_transactions(cls, value):
+        # Ignora elementos vacíos o incompletos que a veces devuelven los LLMs
+        if value is None:
+            return []
+        if isinstance(value, list):
+            filtered: List[object] = []
+            for item in value:
+                # Acepta instancias ya parseadas
+                if isinstance(item, TransactionAiProcessing):
+                    filtered.append(item)
+                    continue
+                # Solo procesa dicts
+                if not isinstance(item, dict):
+                    continue
+                # Descarta dicts vacíos
+                if not item:
+                    continue
+                required_keys = [
+                    "transaction_value",
+                    "description",
+                    "date",
+                    "transaction_type",
+                ]
+                if all(k in item and item[k] not in (None, "") for k in required_keys):
+                    filtered.append(item)
+            return filtered
+        return value
 
 
 class StatementResponse(BaseModel):

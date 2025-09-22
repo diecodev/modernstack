@@ -29,6 +29,18 @@ La salida debe ser un objeto JSON con las siguientes claves a nivel superior:
 Cada objeto JSON en el arreglo debe representar una única transacción.
 Cada objeto debe contener exclusivamente las siguientes claves: "transaction_value", "description", "date", "transaction_type", y "balance_after_transaction".
 
+Reglas estrictas de formato y calidad:
+- No incluyas objetos vacíos ("{{}}") ni elementos con campos faltantes en el arreglo "transactions". Si una línea no tiene datos suficientes, omítela.
+- No agregues comentarios, explicaciones ni texto fuera del JSON. Devuelve solo JSON válido.
+- No infieras ni inventes transacciones. Si hay duda, omite la transacción.
+- Evita duplicados: si detectas la misma transacción repetida, mantén solo una.
+- Asegúrate de que el JSON sea válido (sin comas colgantes, sin NaN/Infinity, sin claves extra).
+
+Exclusiones y criterios mínimos:
+- Ignora líneas de cierre o marcadores como: "FIN ESTADO DE CUENTA", "SALDO FINAL", "TOTAL", "RESUMEN" u otros encabezados/pies de página.
+- Solo incluye transacciones con al menos: fecha reconocible (preferiblemente AAAA-MM-DD), monto y tipo.
+- Si no puedes determinar el año con certeza, usa el del documento o el más probable por contexto.
+
 En caso de que el documento no sea un extracto bancario o no se pueda procesar, la estructura de la salida debe ser la siguiente:
 {{
   "previous_balance": null,

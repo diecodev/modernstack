@@ -71,22 +71,22 @@ class StatementService:
                 TRANSACTION_EMBEDDING_PROMPT
             )
             transaction_embedding_chain = (
-                RunnableLambda(
-                    lambda x: {
-                        "tx_type": "gasto"
-                        if x.transaction_type == TransactionType.EXPENSE.value
-                        else "ingreso",
-                        "amount": x.transaction_value,
-                        "description": x.description,
-                    }
-                )
-                | transaction_embedding_prompt
+                transaction_embedding_prompt
                 | transaction_embedding_model
                 | PydanticOutputParser(pydantic_object=TransactionEmbedding)
             )
+
+            tx_type_raw = transaction.transaction_type
+            if isinstance(tx_type_raw, TransactionType):
+                is_expense = tx_type_raw == TransactionType.EXPENSE
+            else:
+                tx_str = str(tx_type_raw).lower()
+                is_expense = tx_str in ("expense", "transactiontype.expense")
+            tx_type_es = "gasto" if is_expense else "ingreso"
+
             transaction_description = await transaction_embedding_chain.ainvoke(
                 {
-                    "tx_type": transaction.transaction_type,
+                    "tx_type": tx_type_es,
                     "amount": transaction.transaction_value,
                     "description": transaction.description,
                 }
@@ -151,7 +151,7 @@ class StatementService:
                 statement_ai_processing.current_balance,
                 statement_ai_processing.previous_balance,
             )
-        except ValueError:
+        except ValueError as e:
             await redis.rpush(
                 key,
                 json.dumps(
@@ -162,6 +162,7 @@ class StatementService:
                 ),
             )
             await redis.expire(key, settings.redis_key_ttl_seconds)
+            print(e)
             return StatementStatus.FAILED, None, None
         except Exception as e:
             await redis.rpush(

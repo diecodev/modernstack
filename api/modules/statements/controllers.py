@@ -31,50 +31,55 @@ async def upload_statement(
     files: list[UploadFile],
     request: Request,
 ) -> dict:
-    if len(files) > 12:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At most 12 files are allowed",
+    try:
+        if len(files) > 12:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At most 12 files are allowed",
+            )
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
         )
-    project = await services.projects.get_by_id(
-        project_id, organization_id=organization_id
-    )
 
-    for file in files:
-        if file.content_type != "application/pdf":
-            await services.statements.create_statement_in_db(
+        for file in files:
+            if file.content_type != "application/pdf":
+                await services.statements.create_statement_in_db(
+                    name=file.filename,
+                    status=StatementStatus.FAILED,
+                    project=project,
+                    error="Only PDF files are allowed",
+                )
+                continue
+            if file.size > 10 * 1024 * 1024:
+                await services.statements.create_statement_in_db(
+                    name=file.filename,
+                    status=StatementStatus.FAILED,
+                    project=project,
+                    error="File size must be less than 10MB",
+                )
+                continue
+            statement = await services.statements.create_statement_in_db(
                 name=file.filename,
-                status=StatementStatus.FAILED,
+                status=StatementStatus.PENDING,
                 project=project,
-                error="Only PDF files are allowed",
             )
-            continue
-        if file.size > 10 * 1024 * 1024:
-            await services.statements.create_statement_in_db(
-                name=file.filename,
-                status=StatementStatus.FAILED,
-                project=project,
-                error="File size must be less than 10MB",
+            await services.files.upload_file(
+                file=file,
+                organization_id=organization_id,
+                project_id=project_id,
+                statement_id=statement.id,
             )
-            continue
-        statement = await services.statements.create_statement_in_db(
-            name=file.filename,
-            status=StatementStatus.PROCESSING,
-            project=project,
+            await services.statements.send_statement_to_queue(
+                statement=statement,
+                request=request,
+                project_id=project_id,
+                organization_id=organization_id,
+            )
+            return {"status": "success", "message": "Statements uploaded"}
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-        await services.files.upload_file(
-            file=file,
-            organization_id=organization_id,
-            project_id=project_id,
-            statement_id=statement.id,
-        )
-        await services.statements.send_statement_to_queue(
-            statement=statement,
-            request=request,
-            project_id=project_id,
-            organization_id=organization_id,
-        )
-    return {"status": "success", "message": "Statements uploaded"}
 
 
 @statements_router.get("/{statement_id}")
@@ -172,6 +177,13 @@ async def create_statement(
             organization_id=organization_id,
             project_id=project_id,
             statement_id=statement.id,
+        )
+        await services.statements.update(
+            id=statement.id,
+            project_id=project.id,
+            statement_update=StatementUpdate(
+                status=StatementStatus.PROCESSING,
+            ),
         )
         status, current_balance, previous_balance = await services.statements.create(
             statement=statement, file_content=file_content
