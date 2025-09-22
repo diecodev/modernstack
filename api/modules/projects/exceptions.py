@@ -4,3 +4,7 @@ class ProjectNotFoundException(Exception):
 
 class ProjectAlreadyExistsException(Exception):
     pass
+
+
+class ProjectLimitReachedException(Exception):
+    pass

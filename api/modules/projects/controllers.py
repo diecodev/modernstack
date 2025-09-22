@@ -10,6 +10,7 @@ from modules.projects.schemas import (
 from modules.projects.exceptions import (
     ProjectAlreadyExistsException,
     ProjectNotFoundException,
+    ProjectLimitReachedException,
 )
 from dependencies import ServiceDep, OrganizationIdDep
 
@@ -27,6 +28,11 @@ async def create_project(
     except ProjectAlreadyExistsException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Project already exists"
+        )
+    except ProjectLimitReachedException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Project limit reached (max 10 per organization)",
         )
 
 

@@ -7,6 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from modules.projects.exceptions import (
     ProjectAlreadyExistsException,
     ProjectNotFoundException,
+    ProjectLimitReachedException,
 )
 from modules.projects.models import Project
 from modules.projects.schemas import ProjectCreate, ProjectUpdate
@@ -15,6 +16,11 @@ from modules.projects.schemas import ProjectCreate, ProjectUpdate
 class ProjectService:
     async def create(self, project: ProjectCreate, organization_id: str) -> Project:
         try:
+            existing_count = await Project.find(
+                Project.organization_id == organization_id
+            ).count()
+            if existing_count >= 10:
+                raise ProjectLimitReachedException
             new_project = Project(
                 organization_id=organization_id, **project.model_dump()
             )
