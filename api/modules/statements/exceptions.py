@@ -1,0 +1,2 @@
+class StatementNotFoundException(Exception):
+    pass
