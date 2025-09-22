@@ -5,6 +5,7 @@ from routers import router
 from db import db
 from modules.projects.models import Project
 from modules.statements.models import Statement, Transaction
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Reconstruir modelos para resolver referencias circulares
@@ -26,5 +27,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, title="ModernStack API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router)
