@@ -12,7 +12,13 @@ from dependencies import OrganizationIdDep
 from modules.projects.exceptions import ProjectNotFoundException
 from modules.statements.enums import StatementStatus
 from modules.statements.exceptions import StatementNotFoundException
-from modules.statements.schemas import StatementResponse, StatementUpdate
+from modules.statements.schemas import (
+    StatementResponse,
+    StatementUpdate,
+    StatementsPaginatedResponse,
+    TransactionsPaginatedResponse,
+)
+from fastapi import Query
 
 statements_router = APIRouter(prefix="/projects/{project_id}/statements")
 
@@ -93,6 +99,61 @@ async def get_statement(
         )
 
 
+@statements_router.get("")
+async def list_statements(
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+    limit: int = Query(10, ge=1),
+    offset: int = Query(0, ge=0),
+    search: str | None = Query(default=None),
+) -> StatementsPaginatedResponse:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        statements, total = await services.statements.list_paginated(
+            project_id=project.id, limit=limit, offset=offset, search=search
+        )
+        return {"statements": statements, "total": total}
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+
+
+@statements_router.get("/{statement_id}/transactions")
+async def list_statement_transactions(
+    statement_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+    limit: int = Query(10, ge=1),
+    offset: int = Query(0, ge=0),
+    search: str | None = Query(default=None),
+) -> TransactionsPaginatedResponse:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        transactions, total = await services.statements.list_transactions_paginated(
+            statement_id=statement_id,
+            project_id=project.id,
+            limit=limit,
+            offset=offset,
+            search=search,
+        )
+        return {"transactions": transactions, "total": total}
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+
+
 @statements_router.post("/{statement_id}")
 async def create_statement(
     statement_id: PydanticObjectId,
@@ -112,7 +173,7 @@ async def create_statement(
             project_id=project_id,
             statement_id=statement.id,
         )
-        status = await services.statements.create(
+        status, current_balance, previous_balance = await services.statements.create(
             statement=statement, file_content=file_content
         )
         if status == StatementStatus.FAILED:
@@ -129,6 +190,15 @@ async def create_statement(
                 statement_id=statement.id,
             )
             return {"status": "error", "message": "Statement failed"}
+        await services.statements.update(
+            id=statement.id,
+            project_id=project.id,
+            statement_update=StatementUpdate(
+                status=StatementStatus.COMPLETED,
+                current_balance=current_balance,
+                previous_balance=previous_balance,
+            ),
+        )
         return {"status": "success", "message": "Statement created"}
     except ProjectNotFoundException:
         return {"status": "error", "message": "Project not found"}

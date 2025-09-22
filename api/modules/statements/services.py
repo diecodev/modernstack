@@ -13,20 +13,26 @@ from modules.statements.schemas import StatementAiProcessing, StatementUpdate
 from modules.statements.constant import (
     STATEMENT_PROCESSING_SYSTEM_PROMPT,
     STATEMENT_PROCESSING_HUMAN_PROMPT,
+    TRANSACTION_EMBEDDING_PROMPT,
 )
-from modules.statements.llms import statement_processing_model
+from modules.statements.llms import (
+    statement_processing_model,
+    transaction_embedding_model,
+)
 from modules.statements.enums import StatementStatus
 import json
 from db import redis
 from settings import settings
 from typing import Optional
 from modules.projects.models import Project
-from modules.statements.schemas import TransactionAiProcessing
+from modules.statements.schemas import TransactionAiProcessing, TransactionEmbedding
 from modules.statements.models import Transaction
 from typing import List
 from modules.statements.llms import embeddings
 from db import qstash
 from datetime import datetime, timezone
+from modules.statements.enums import TransactionType
+import re
 
 
 class StatementService:
@@ -61,9 +67,35 @@ class StatementService:
         transactions: List[TransactionAiProcessing],
     ) -> None:
         for transaction in transactions:
-            embedding = embeddings.embed_query(transaction.description)
+            transaction_embedding_prompt = ChatPromptTemplate.from_template(
+                TRANSACTION_EMBEDDING_PROMPT
+            )
+            transaction_embedding_chain = (
+                RunnableLambda(
+                    lambda x: {
+                        "tx_type": "gasto"
+                        if x.transaction_type == TransactionType.EXPENSE.value
+                        else "ingreso",
+                        "amount": x.transaction_value,
+                        "description": x.description,
+                    }
+                )
+                | transaction_embedding_prompt
+                | transaction_embedding_model
+                | PydanticOutputParser(pydantic_object=TransactionEmbedding)
+            )
+            transaction_description = await transaction_embedding_chain.ainvoke(
+                {
+                    "tx_type": transaction.transaction_type,
+                    "amount": transaction.transaction_value,
+                    "description": transaction.description,
+                }
+            )
+            embedding = embeddings.embed_query(transaction_description.description)
             new_transaction = Transaction(
-                statement=statement, **transaction.model_dump(), embedding=embedding
+                statement=statement,
+                **transaction.model_dump(),
+                embedding=embedding,
             )
             await new_transaction.create()
 
@@ -98,7 +130,7 @@ class StatementService:
         self,
         statement: Statement,
         file_content: bytes,
-    ) -> StatementStatus:
+    ) -> tuple[StatementStatus, Optional[float], Optional[float]]:
         try:
             key = f"statement_processing:{str(statement.id)}"
             await redis.rpush(
@@ -114,7 +146,11 @@ class StatementService:
                 key, json.dumps({"status": StatementStatus.COMPLETED.value})
             )
             await redis.expire(key, settings.redis_key_ttl_seconds)
-            return StatementStatus.COMPLETED
+            return (
+                StatementStatus.COMPLETED,
+                statement_ai_processing.current_balance,
+                statement_ai_processing.previous_balance,
+            )
         except ValueError:
             await redis.rpush(
                 key,
@@ -126,14 +162,14 @@ class StatementService:
                 ),
             )
             await redis.expire(key, settings.redis_key_ttl_seconds)
-            return StatementStatus.FAILED
+            return StatementStatus.FAILED, None, None
         except Exception as e:
             await redis.rpush(
                 key,
                 json.dumps({"status": StatementStatus.FAILED.value, "error": str(e)}),
             )
             await redis.expire(key, settings.redis_key_ttl_seconds)
-            return StatementStatus.FAILED
+            return StatementStatus.FAILED, None, None
 
     async def get_by_id(
         self, statement_id: PydanticObjectId, project_id: PydanticObjectId
@@ -142,12 +178,55 @@ class StatementService:
             And(
                 Statement.id == statement_id,
                 Statement.project.id == project_id,
-            ),
-            fetch_links=True,
+            )
         )
         if not statement:
             raise StatementNotFoundException
         return statement
+
+    async def list_paginated(
+        self,
+        project_id: PydanticObjectId,
+        limit: int = 10,
+        offset: int = 0,
+        search: Optional[str] = None,
+    ) -> tuple[List[Statement], int]:
+        filters = [Statement.project.id == project_id]
+        if search:
+            pattern = re.compile(re.escape(search), re.IGNORECASE)
+            filters.append(Statement.name == pattern)
+
+        query = Statement.find(And(*filters))
+        total = await query.count()
+        statements = (
+            await query.sort(-Statement.created_at).skip(offset).limit(limit).to_list()
+        )
+        return statements, total
+
+    async def list_transactions_paginated(
+        self,
+        statement_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+        limit: int = 10,
+        offset: int = 0,
+        search: Optional[str] = None,
+    ) -> tuple[List[Transaction], int]:
+        # Validar que el statement pertenezca al proyecto
+        statement = await self.get_by_id(
+            statement_id=statement_id, project_id=project_id
+        )
+
+        filters = [Transaction.statement.id == statement.id]
+        if search:
+            pattern = re.compile(re.escape(search), re.IGNORECASE)
+            filters.append(Transaction.description == pattern)
+
+        tx_query = Transaction.find(And(*filters))
+        total = await tx_query.count()
+        transactions = (
+            await tx_query.sort(-Transaction.date).skip(offset).limit(limit).to_list()
+        )
+        return transactions, total
 
     async def update(
         self,

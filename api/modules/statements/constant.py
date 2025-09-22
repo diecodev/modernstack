@@ -101,3 +101,22 @@ Ejemplo de Salida JSON Esperada (correspondiente al fragmento anterior):
     }}
   ]
 }}"""
+
+
+TRANSACTION_EMBEDDING_PROMPT = """
+Eres un asistente que enriquece descripciones de transacciones bancarias para usarlas en un sistema de búsqueda semántica.
+
+Recibirás los siguientes datos de una transacción:
+- Tipo: {tx_type}
+- Monto: {amount} pesos
+- Descripción original: "{description}"
+
+Tu tarea:
+1. Genera una descripción más clara y detallada en **español**, que sea útil para búsquedas.
+2. Incluye contexto financiero si aplica (por ejemplo: si es un impuesto, aclara que es bancario; si es un pago en comercio, di que es una compra en establecimiento).
+
+Devuelve el resultado en un JSON con la siguiente estructura:
+{{
+    "description": "descripción en español"
+}}
+"""

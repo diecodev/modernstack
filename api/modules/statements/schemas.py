@@ -60,3 +60,17 @@ class StatementUpdate(BaseModel):
     status: Optional[StatementStatus] = None
     current_balance: Optional[float] = None
     previous_balance: Optional[float] = None
+
+
+class TransactionEmbedding(BaseModel):
+    description: str
+
+
+class TransactionsPaginatedResponse(BaseModel):
+    transactions: List[TransactionResponse]
+    total: int
+
+
+class StatementsPaginatedResponse(BaseModel):
+    statements: List[StatementResponse]
+    total: int
