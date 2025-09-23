@@ -8,10 +8,10 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 ENV UV_TOOL_BIN_DIR=/usr/local/bin
-COPY pyproject.toml uv.lock ./
+COPY api/pyproject.toml api/uv.lock ./
 RUN uv sync --locked --no-install-project --no-dev
 
-COPY . /app
+COPY api/ /app
 RUN uv sync --locked --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
