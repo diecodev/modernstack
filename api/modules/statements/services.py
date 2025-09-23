@@ -7,9 +7,16 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain_core.output_parsers import PydanticOutputParser
 from qstash.message import FlowControl
-from modules.statements.exceptions import StatementNotFoundException
+from modules.statements.exceptions import (
+    StatementNotFoundException,
+    TransactionNotFoundException,
+)
 from modules.statements.models import Statement
-from modules.statements.schemas import StatementAiProcessing, StatementUpdate
+from modules.statements.schemas import (
+    StatementAiProcessing,
+    StatementUpdate,
+    TransactionCreate,
+)
 from modules.statements.constant import (
     STATEMENT_PROCESSING_SYSTEM_PROMPT,
     STATEMENT_PROCESSING_HUMAN_PROMPT,
@@ -212,7 +219,6 @@ class StatementService:
         offset: int = 0,
         search: Optional[str] = None,
     ) -> tuple[List[Transaction], int]:
-        # Validar que el statement pertenezca al proyecto
         statement = await self.get_by_id(
             statement_id=statement_id, project_id=project_id
         )
@@ -228,6 +234,87 @@ class StatementService:
             await tx_query.sort(-Transaction.date).skip(offset).limit(limit).to_list()
         )
         return transactions, total
+
+    async def get_transaction_by_id(
+        self,
+        transaction_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+    ) -> Transaction:
+        transaction = await Transaction.get(transaction_id)
+        if not transaction:
+            raise TransactionNotFoundException
+        await self.get_by_id(
+            statement_id=transaction.statement.id, project_id=project_id
+        )
+        return transaction
+
+    async def create_transaction(
+        self,
+        statement_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+        data: TransactionCreate,
+    ) -> Transaction:
+        statement = await self.get_by_id(
+            statement_id=statement_id, project_id=project_id
+        )
+        transaction_embedding_prompt = ChatPromptTemplate.from_template(
+            TRANSACTION_EMBEDDING_PROMPT
+        )
+        transaction_embedding_chain = (
+            transaction_embedding_prompt
+            | transaction_embedding_model
+            | PydanticOutputParser(pydantic_object=TransactionEmbedding)
+        )
+
+        tx_type_raw = data.transaction_type
+        if isinstance(tx_type_raw, TransactionType):
+            is_expense = tx_type_raw == TransactionType.EXPENSE
+        else:
+            tx_str = str(tx_type_raw).lower()
+            is_expense = tx_str in ("expense", "transactiontype.expense")
+        tx_type_es = "gasto" if is_expense else "ingreso"
+
+        transaction_description = await transaction_embedding_chain.ainvoke(
+            {
+                "tx_type": tx_type_es,
+                "amount": data.transaction_value,
+                "description": data.description,
+            }
+        )
+        embedding = embeddings.embed_query(transaction_description.description)
+        new_transaction = Transaction(
+            statement=statement,
+            **data.model_dump(),
+            embedding=embedding,
+        )
+        await new_transaction.create()
+        return new_transaction
+
+    async def update_transaction(
+        self,
+        transaction_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+        data: dict,
+    ) -> Transaction:
+        transaction = await self.get_transaction_by_id(
+            transaction_id=transaction_id, project_id=project_id
+        )
+        update_data = {getattr(Transaction, k): v for k, v in data.items()}
+        update_data[Transaction.updated_at] = datetime.now(timezone.utc)
+        await Transaction.find_one(Transaction.id == transaction.id).set(update_data)
+        return await self.get_transaction_by_id(
+            transaction_id=transaction_id, project_id=project_id
+        )
+
+    async def delete_transaction(
+        self,
+        transaction_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+    ) -> None:
+        transaction = await self.get_transaction_by_id(
+            transaction_id=transaction_id, project_id=project_id
+        )
+        await transaction.delete()
 
     async def update(
         self,
@@ -284,3 +371,14 @@ class StatementService:
                 await asyncio.sleep(1)
             except asyncio.CancelledError:
                 break
+
+    async def delete(
+        self,
+        statement_id: PydanticObjectId,
+        project_id: PydanticObjectId,
+    ) -> None:
+        statement = await self.get_by_id(
+            statement_id=statement_id, project_id=project_id
+        )
+        await Transaction.find(Transaction.statement.id == statement.id).delete()
+        await statement.delete()

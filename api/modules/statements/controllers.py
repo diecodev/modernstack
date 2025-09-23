@@ -17,8 +17,12 @@ from modules.statements.schemas import (
     StatementUpdate,
     StatementsPaginatedResponse,
     TransactionsPaginatedResponse,
+    TransactionCreate,
+    TransactionUpdate,
+    TransactionResponse,
 )
 from fastapi import Query
+from modules.statements.exceptions import TransactionNotFoundException
 
 statements_router = APIRouter(prefix="/projects/{project_id}/statements")
 
@@ -159,6 +163,126 @@ async def list_statement_transactions(
         )
 
 
+@statements_router.get("/{statement_id}/transactions/{transaction_id}")
+async def get_transaction(
+    statement_id: PydanticObjectId,
+    transaction_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+) -> TransactionResponse:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        # Valida statement y ownership a través del servicio
+        await services.statements.get_by_id(statement_id, project_id=project.id)
+        return await services.statements.get_transaction_by_id(
+            transaction_id=transaction_id, project_id=project.id
+        )
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+    except TransactionNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
+
+
+@statements_router.post("/{statement_id}/transactions")
+async def create_transaction(
+    statement_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+    body: TransactionCreate,
+) -> TransactionResponse:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        return await services.statements.create_transaction(
+            statement_id=statement_id, project_id=project.id, data=body
+        )
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+
+
+@statements_router.put("/{statement_id}/transactions/{transaction_id}")
+async def update_transaction(
+    statement_id: PydanticObjectId,
+    transaction_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+    body: TransactionUpdate,
+) -> TransactionResponse:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        await services.statements.get_by_id(statement_id, project_id=project.id)
+        return await services.statements.update_transaction(
+            transaction_id=transaction_id,
+            project_id=project.id,
+            data=body.model_dump(exclude_none=True),
+        )
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+    except TransactionNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
+
+
+@statements_router.delete("/{statement_id}/transactions/{transaction_id}")
+async def delete_transaction(
+    statement_id: PydanticObjectId,
+    transaction_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+) -> dict:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        await services.statements.get_by_id(statement_id, project_id=project.id)
+        await services.statements.delete_transaction(
+            transaction_id=transaction_id, project_id=project.id
+        )
+        return {"status": "success"}
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+    except TransactionNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
+
+
 @statements_router.post("/{statement_id}")
 async def create_statement(
     statement_id: PydanticObjectId,
@@ -262,6 +386,37 @@ async def update_statement(
         return await services.statements.update(
             id=statement_id, project_id=project.id, statement_update=statement_update
         )
+    except StatementNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"
+        )
+    except ProjectNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+
+
+@statements_router.delete("/{statement_id}")
+async def delete_statement(
+    statement_id: PydanticObjectId,
+    services: ServiceDep,
+    project_id: PydanticObjectId,
+    organization_id: OrganizationIdDep,
+) -> dict:
+    try:
+        project = await services.projects.get_by_id(
+            project_id, organization_id=organization_id
+        )
+        await services.files.delete_file(
+            organization_id=organization_id,
+            project_id=str(project.id),
+            statement_id=str(statement_id),
+        )
+        await services.statements.delete(
+            statement_id=statement_id,
+            project_id=project.id,
+        )
+        return {"status": "success"}
     except StatementNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found"

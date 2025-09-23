@@ -11,8 +11,25 @@ class TransactionResponse(BaseModel):
     description: str
     date: datetime
     transaction_type: TransactionType
+    balance_after_transaction: Optional[float] = None
     created_at: datetime
     updated_at: datetime
+
+
+class TransactionCreate(BaseModel):
+    transaction_value: float
+    description: str
+    date: datetime
+    transaction_type: TransactionType
+    balance_after_transaction: Optional[float] = None
+
+
+class TransactionUpdate(BaseModel):
+    transaction_value: Optional[float] = None
+    description: Optional[str] = None
+    date: Optional[datetime] = None
+    transaction_type: Optional[TransactionType] = None
+    balance_after_transaction: Optional[float] = None
 
 
 class StatementCreate(BaseModel):
@@ -36,20 +53,16 @@ class StatementAiProcessing(BaseModel):
     @field_validator("transactions", mode="before")
     @classmethod
     def filter_invalid_transactions(cls, value):
-        # Ignora elementos vacíos o incompletos que a veces devuelven los LLMs
         if value is None:
             return []
         if isinstance(value, list):
             filtered: List[object] = []
             for item in value:
-                # Acepta instancias ya parseadas
                 if isinstance(item, TransactionAiProcessing):
                     filtered.append(item)
                     continue
-                # Solo procesa dicts
                 if not isinstance(item, dict):
                     continue
-                # Descarta dicts vacíos
                 if not item:
                     continue
                 required_keys = [
