@@ -20,15 +20,15 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/py-api/:path*",
-        destination: `${host}/:path*`,
+        destination: "https://api.moick.me/:path*",
       },
       {
         source: "/docs",
-        destination: `${host}/docs`,
+        destination: "https://api.moick.me/docs",
       },
       {
         source: "/openapi.json",
-        destination: `${host}/openapi.json`,
+        destination: "https://api.moick.me/openapi.json",
       },
     ];
   },
