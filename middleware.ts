@@ -34,11 +34,13 @@ export const config: MiddlewareConfig = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
+     * - py-api (Python FastAPI routes)
+     * - docs (Documentation routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!api|docs|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!py-api|api|docs|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
     "/",
     "/new",
     "/o/:path*",

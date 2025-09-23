@@ -15,14 +15,14 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/py-api/:path*",
-        destination: `${host}/api/:path*`,
+        destination: `${host}/:path*`,
       },
       {
-        source: "/py-api/docs",
+        source: "/docs",
         destination: `${host}/docs`,
       },
       {
-        source: "/py-api/openapi.json",
+        source: "/openapi.json",
         destination: `${host}/openapi.json`,
       },
     ];
