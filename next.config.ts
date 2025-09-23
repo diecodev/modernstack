@@ -8,33 +8,35 @@ const nextConfig: NextConfig = {
   },
   typedRoutes: true,
   rewrites: async () => {
-    return [
-      {
-        source: "/api/auth/:path*",
-        destination: "/api/auth/:path*",
-      },
-      {
-        source: "/api/:path*",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000/api/:path*"
-            : "https://api.moick.me/:path*",
-      },
-      {
-        source: "/docs",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000/docs"
-            : "https://api.moick.me/docs",
-      },
-      {
-        source: "/openapi.json",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000/openapi.json"
-            : "https://api.moick.me/openapi.json",
-      },
-    ];
+    const isDev = process.env.NODE_ENV === "development";
+
+    const host = isDev ? "http://127.0.0.1:8000" : "https://api.moick.me";
+
+    return {
+      // Ensure Next/Vercel handles auth endpoints and they're never proxied
+      beforeFiles: [
+        {
+          source: "/api/auth/:path*",
+          destination: "/api/auth/:path*",
+        },
+      ],
+      // Proxy other API and docs routes to the backend service
+      afterFiles: [
+        {
+          source: "/api/:path*",
+          destination: `${host}/api/:path*`,
+        },
+        {
+          source: "/docs",
+          destination: `${host}/docs`,
+        },
+        {
+          source: "/openapi.json",
+          destination: `${host}/openapi.json`,
+        },
+      ],
+      fallback: [],
+    };
   },
 };
 
