@@ -18,4 +18,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 ENTRYPOINT []
 
-CMD ["fastapi", "run"]
+CMD ["fastapi", "run", "--proxy-headers"]
