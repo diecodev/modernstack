@@ -38,7 +38,7 @@ export const config: MiddlewareConfig = {
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!api|docs|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!py-api|docs|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
     "/",
     "/new",
     "/o/:path*",
