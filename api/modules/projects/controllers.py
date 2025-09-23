@@ -17,7 +17,7 @@ from dependencies import ServiceDep, OrganizationIdDep
 projects_router = APIRouter(prefix="/projects")
 
 
-@projects_router.post("/")
+@projects_router.post("")
 async def create_project(
     project: ProjectCreate, services: ServiceDep, organization_id: OrganizationIdDep
 ) -> ProjectResponse:
@@ -36,7 +36,7 @@ async def create_project(
         )
 
 
-@projects_router.get("/")
+@projects_router.get("")
 async def get_projects(
     organization_id: OrganizationIdDep, services: ServiceDep
 ) -> List[ProjectResponse]:
