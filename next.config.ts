@@ -12,20 +12,22 @@ const nextConfig: NextConfig = {
 
     const host = isDev ? "http://127.0.0.1:8000" : "https://api.moick.me";
 
-    return [
-      {
-        source: "/py-api/:path*",
-        destination: `${host}/:path*`,
-      },
-      {
-        source: "/docs",
-        destination: `${host}/docs`,
-      },
-      {
-        source: "/openapi.json",
-        destination: `${host}/openapi.json`,
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: "/py-api/:path*",
+          destination: `${host}/:path*`,
+        },
+        {
+          source: "/docs",
+          destination: `${host}/docs`,
+        },
+        {
+          source: "/openapi.json",
+          destination: `${host}/openapi.json`,
+        },
+      ],
+    };
   },
 };
 
