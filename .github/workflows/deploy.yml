@@ -10,10 +10,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SVC_ID: modernstack-api
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
-      - name: deploy
-        uses: bervProject/railway-deploy@main
-        env:
-            RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN}}
-        with:
-            service: "modernstack-api"
+        - uses: actions/checkout@v3
+        - run: railway up --service=${{ env.SVC_ID }}
