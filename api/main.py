@@ -20,7 +20,6 @@ async def lifespan(app: FastAPI):
     try:
         await db.command("ping")
     except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {e}")
         raise e
 
     yield
