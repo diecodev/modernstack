@@ -8,7 +8,6 @@ from modules.statements.models import Statement, Transaction
 from fastapi.middleware.cors import CORSMiddleware
 
 
-# Reconstruir modelos para resolver referencias circulares
 Statement.model_rebuild()
 Transaction.model_rebuild()
 Project.model_rebuild()
@@ -25,7 +24,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan, title="ModernStack API")
+app = FastAPI(lifespan=lifespan, title="Moick API")
 
 app.add_middleware(
     CORSMiddleware,
