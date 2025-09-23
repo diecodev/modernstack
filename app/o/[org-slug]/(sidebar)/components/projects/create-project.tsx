@@ -29,7 +29,7 @@ import { projectSchema, type TProjectSchema } from "@/validators/projects";
 // No-op
 
 async function createProject(value: TProjectSchema) {
-  const response = await fetchClient("/api/projects", {
+  const response = await fetchClient("/py-api/projects", {
     method: "POST",
     body: JSON.stringify({
       name: value.name,
