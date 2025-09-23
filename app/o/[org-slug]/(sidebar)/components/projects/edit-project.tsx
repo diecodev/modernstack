@@ -30,7 +30,7 @@ import { projectSchema, type TProjectSchema } from "@/validators/projects";
 const WS = /\s+/;
 
 async function updateProject(projectId: string, value: TProjectSchema) {
-  const response = await fetchClient(`/api/projects/${projectId}`, {
+  const response = await fetchClient(`/py-api/projects/${projectId}`, {
     method: "PUT",
     body: JSON.stringify({
       name: value.name,

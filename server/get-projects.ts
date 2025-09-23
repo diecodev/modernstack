@@ -9,7 +9,7 @@ export const getProjects = cache(async ({ headers }: { headers: Headers }) => {
   const activeOrgId = await auth.api.getFullOrganization({ headers });
 
   const url = parsedEnv.BETTER_AUTH_URL;
-  const path = "/api/projects";
+  const path = "/py-api/projects";
 
   const response = await fetch(`${url}${path}`, {
     method: "GET",

@@ -14,15 +14,15 @@ const nextConfig: NextConfig = {
 
     return [
       {
-        source: "/api/:path((?!auth/).*)", // match anything under /api except auth/*
+        source: "/py-api/:path*",
         destination: `${host}/api/:path*`,
       },
       {
-        source: "/docs",
+        source: "/py-api/docs",
         destination: `${host}/docs`,
       },
       {
-        source: "/openapi.json",
+        source: "/py-api/openapi.json",
         destination: `${host}/openapi.json`,
       },
     ];
