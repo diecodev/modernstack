@@ -12,31 +12,20 @@ const nextConfig: NextConfig = {
 
     const host = isDev ? "http://127.0.0.1:8000" : "https://api.moick.me";
 
-    return {
-      // Ensure Next/Vercel handles auth endpoints and they're never proxied
-      beforeFiles: [
-        {
-          source: "/api/auth/:path*",
-          destination: "/api/auth/:path*",
-        },
-      ],
-      // Proxy other API and docs routes to the backend service
-      afterFiles: [
-        {
-          source: "/api/:path*",
-          destination: `${host}/api/:path*`,
-        },
-        {
-          source: "/docs",
-          destination: `${host}/docs`,
-        },
-        {
-          source: "/openapi.json",
-          destination: `${host}/openapi.json`,
-        },
-      ],
-      fallback: [],
-    };
+    return [
+      {
+        source: "/api/:path((?!auth/).*)", // match anything under /api except auth/*
+        destination: `${host}/api/:path*`,
+      },
+      {
+        source: "/docs",
+        destination: `${host}/docs`,
+      },
+      {
+        source: "/openapi.json",
+        destination: `${host}/openapi.json`,
+      },
+    ];
   },
 };
 
