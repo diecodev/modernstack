@@ -295,7 +295,7 @@ function DropdownMenuContent({
               exit={{
                 opacity: 0,
                 scale: 0.95,
-                transition: { ...transition, delay: 0.3 },
+                transition: { ...transition, delay: 0.15 },
               }}
               initial={{ opacity: 0, scale: 0.95 }}
               key="dropdown-menu-content"

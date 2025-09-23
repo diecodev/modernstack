@@ -10,7 +10,9 @@ export type TypedLinkProps<H extends _Href = _Href> = LinkRestProps &
     ? { href: H; params?: undefined }
     : { href: H; params: ParamMap[H] });
 
-const dynamicSegmentRegex = /\[(\.\.\.)?([A-Za-z0-9_]+)\]/g;
+// Precompiled regex for performance & lint compliance
+// Allow hyphens and underscores in param names to match folder segments
+const dynamicSegmentRegex = /\[(\.{3})?([A-Za-z0-9_-]+)\]/g;
 const unresolvedBracketsRegex = /\[|\]/;
 
 function buildDynamicHref<H extends _Href>(
@@ -24,7 +26,7 @@ function buildDynamicHref<H extends _Href>(
   const result = (pattern as string).replace(
     dynamicSegmentRegex,
     (match, dots: string | undefined, name: string) => {
-      const value = (params as Record<string, unknown>)[name];
+      const value = resolveParam(params as Record<string, unknown>, name);
       if (dots) {
         if (!Array.isArray(value)) {
           throw new Error(
@@ -57,6 +59,58 @@ function buildDynamicHref<H extends _Href>(
   return result;
 }
 
+// Additional regex constants at top-level per lint rules
+const WORD_SPLIT_RE = /[-_]/;
+const CAMEL_BOUNDARY_RE = /([a-z0-9])([A-Z])/g;
+
+// Naming helpers to bridge camelCase, kebab-case, and snake_case param keys
+function toCamel(input: string): string {
+  return input
+    .split(WORD_SPLIT_RE)
+    .map((part, idx) =>
+      idx === 0
+        ? part.toLowerCase()
+        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+    )
+    .join("");
+}
+
+function toSnake(input: string): string {
+  const withUnderscore = input.replace(/-/g, "_");
+  return withUnderscore.replace(CAMEL_BOUNDARY_RE, "$1_$2").toLowerCase();
+}
+
+function toKebab(input: string): string {
+  const withDash = input.replace(/_/g, "-");
+  return withDash.replace(CAMEL_BOUNDARY_RE, "$1-$2").toLowerCase();
+}
+
+function resolveParam(
+  paramMap: Record<string, unknown>,
+  name: string
+): unknown {
+  // Try exact first
+  if (Object.hasOwn(paramMap, name)) {
+    return paramMap[name];
+  }
+  // Try common variants
+  const variants = new Set<string>([
+    name,
+    name.replace(/-/g, "_"),
+    name.replace(/_/g, "-"),
+    toCamel(name),
+    toSnake(name),
+    toKebab(name),
+    toSnake(toCamel(name)),
+    toKebab(toCamel(name)),
+  ]);
+  for (const key of variants) {
+    if (Object.hasOwn(paramMap, key)) {
+      return paramMap[key];
+    }
+  }
+  return;
+}
 /**
  * TypedLink is a type-safe wrapper around Next.js's Link component.
  * It enforces route param correctness using your project's ParamMap type.

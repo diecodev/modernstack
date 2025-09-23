@@ -3,6 +3,7 @@
 import { BotMessageSquare, Command } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { use } from "react";
 import {
   SidebarContent,
   SidebarGroup,
@@ -11,6 +12,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/animate-ui/components/radix/sidebar";
+import type { Project } from "@/types";
+import NoProjectsCTA from "./projects/no-projects-cta";
+import ProjectItem from "./projects/project-item";
 
 // Normalize paths to avoid mismatches due to trailing slashes
 function stripTrailingSlash(p: string): string {
@@ -55,10 +59,16 @@ const topItems = [
   },
 ];
 
-export const AppSidebarContent = () => {
+export const AppSidebarContent = ({
+  projects: _projects,
+}: {
+  projects: Promise<Project[]>;
+}) => {
   const param = useParams<{ "org-slug": string }>();
   const path = usePathname();
-  const orgBase = `/o/${param["org-slug"]}` as const;
+  const slug = param["org-slug"];
+  const orgBase = `/o/${slug}` as const;
+  const projects = use(_projects);
 
   return (
     <SidebarContent>
@@ -89,6 +99,21 @@ export const AppSidebarContent = () => {
           </SidebarMenu>
         </SidebarGroup>
       ))}
+
+      {projects.length === 0 ? (
+        <NoProjectsCTA />
+      ) : (
+        <SidebarGroup className="py-1">
+          <SidebarGroupLabel className="mb-1 h-fit p-1">
+            Projects
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            {projects.map((p) => (
+              <ProjectItem key={p.id} project={p} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      )}
     </SidebarContent>
   );
 };

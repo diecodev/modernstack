@@ -18,7 +18,7 @@ import {
 } from "@/validators/organization";
 import type { getUser } from "../page";
 
-function FieldInfo({
+export function FieldInfo({
   field,
   defaultValue,
 }: {

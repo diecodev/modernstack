@@ -19,4 +19,4 @@ s3 = boto3.client(
 
 redis = aioredis.from_url(url=settings.redis_url, decode_responses=True)
 
-qstash = AsyncQStash(settings.qstash_token, base_url="http://localhost:8081")
+qstash = AsyncQStash(settings.qstash_token)
