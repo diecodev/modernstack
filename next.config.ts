@@ -7,28 +7,23 @@ const nextConfig: NextConfig = {
     useCache: true,
   },
   typedRoutes: true,
-  async rewrites() {
-    const isDev =
-      process.env.VERCEL === "1" &&
-      process.env.VERCEL_ENV !== "production" &&
-      process.env.VERCEL_ENV !== "preview";
+  rewrites: async () => {
+    const isDev = process.env.NODE_ENV === "development";
 
     const host = isDev ? "http://127.0.0.1:8000" : "https://api.moick.me";
-
-    console.log("Rewrites host:", host);
 
     return [
       {
         source: "/py-api/:path*",
-        destination: "https://api.moick.me/:path*",
+        destination: `${host}/:path*`,
       },
       {
         source: "/docs",
-        destination: "https://api.moick.me/docs",
+        destination: `${host}/docs`,
       },
       {
         source: "/openapi.json",
-        destination: "https://api.moick.me/openapi.json",
+        destination: `${host}/openapi.json`,
       },
     ];
   },
