@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/a11y/noSvgWithoutTitle: <explanation> */
+/** biome-ignore-all lint/a11y/noSvgWithoutTitle: <> */
 "use client";
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui-components/react/checkbox";
