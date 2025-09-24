@@ -344,7 +344,7 @@ class StatementService:
         project_id: str,
         organization_id: str,
     ) -> None:
-        url = f"{request.url.scheme}://{request.headers.get('host')}/api/projects/{project_id}/statements/{statement.id}"
+        url = f"{request.url.scheme}://{request.headers.get('host')}/projects/{project_id}/statements/{statement.id}"
         await qstash.message.publish_json(
             url=url,
             method="POST",
