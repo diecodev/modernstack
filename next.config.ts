@@ -8,22 +8,18 @@ const nextConfig: NextConfig = {
   },
   typedRoutes: true,
   rewrites: async () => {
-    const isDev = process.env.NODE_ENV === "development";
-
-    const host = isDev ? "http://127.0.0.1:8000" : "https://api.moick.me";
-
     return [
       {
         source: "/py-api/:path*",
-        destination: `${host}/:path*`,
+        destination: "https://api.moick.me/:path*",
       },
       {
         source: "/docs",
-        destination: `${host}/docs`,
+        destination: "https://api.moick.me/docs",
       },
       {
         source: "/openapi.json",
-        destination: `${host}/openapi.json`,
+        destination: "https://api.moick.me/openapi.json",
       },
     ];
   },
