@@ -69,7 +69,7 @@ export function ProjectItem({ project }: { project: Project }) {
   };
 
   return (
-    <SidebarMenuItem className="items-center">
+    <SidebarMenuItem className="items-center" data-project-id={project.id}>
       <ContextMenu>
         <SidebarMenuButton
           asChild
