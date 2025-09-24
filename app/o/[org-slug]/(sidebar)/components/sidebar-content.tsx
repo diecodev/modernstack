@@ -1,17 +1,19 @@
 "use client";
 
-import { BotMessageSquare, Command } from "lucide-react";
+import { BotMessageSquare, Command, Plus } from "lucide-react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { use } from "react";
 import {
   SidebarContent,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/animate-ui/components/radix/sidebar";
+import { NEW_PROJECT_MODAL_KEY, NEW_PROJECT_MODAL_VALUE } from "@/constants";
 import type { Project } from "@/types";
 import NoProjectsCTA from "./projects/no-projects-cta";
 import ProjectItem from "./projects/project-item";
@@ -69,6 +71,14 @@ export const AppSidebarContent = ({
   const slug = param["org-slug"];
   const orgBase = `/o/${slug}` as const;
   const projects = use(_projects);
+  const router = useRouter();
+
+  const createNewProject = () => {
+    const sp = new URLSearchParams(window.location.search);
+    sp.set(NEW_PROJECT_MODAL_KEY, NEW_PROJECT_MODAL_VALUE);
+    const search = `${sp.toString()}`;
+    router.push(`?${search}`);
+  };
 
   return (
     <SidebarContent>
@@ -106,6 +116,12 @@ export const AppSidebarContent = ({
         <SidebarGroup className="py-1">
           <SidebarGroupLabel className="mb-1 h-fit p-1">
             Projects
+            <SidebarGroupAction
+              className="text-muted-foreground hover:text-foreground"
+              onClick={createNewProject}
+            >
+              <Plus className="size-3!" />
+            </SidebarGroupAction>
           </SidebarGroupLabel>
           <SidebarMenu>
             {projects.map((p) => (

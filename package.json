@@ -23,6 +23,7 @@
     ]
   },
   "dependencies": {
+    "@base-ui-components/react": "1.0.0-beta.3",
     "@dicebear/collection": "^9.2.4",
     "@dicebear/core": "^9.2.4",
     "@floating-ui/react": "^0.27.16",

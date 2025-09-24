@@ -6,6 +6,7 @@ export const MIN_PROJECT_NAME_LENGTH = 3;
 export const NEW_PROJECT_MODAL_KEY = "create";
 export const NEW_PROJECT_MODAL_VALUE = "project";
 export const EDIT_PROJECT_MODAL_KEY = "edit_project";
+export const REMOVE_PROJECT_MODAL_KEY = "remove_project";
 
 export const PRESET_PROJECT_COLORS = [
   "#68D391", // soft green

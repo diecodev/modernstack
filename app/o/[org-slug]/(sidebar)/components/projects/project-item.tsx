@@ -2,10 +2,12 @@
 
 import { FolderCode, MoreHorizontal } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { Fragment } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/animate-ui/components/radix/dropdown-menu";
 import {
@@ -18,9 +20,10 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { EDIT_PROJECT_MODAL_KEY } from "@/constants";
+import { EDIT_PROJECT_MODAL_KEY, REMOVE_PROJECT_MODAL_KEY } from "@/constants";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Project } from "@/types";
 
@@ -28,8 +31,8 @@ type OptionAction = "edit_project" | "remove_project" | "copy_link";
 
 const options: Array<{ id: number; label: string; action: OptionAction }> = [
   { id: 1, label: "Edit Project", action: "edit_project" },
-  { id: 2, label: "Remove Project", action: "remove_project" },
   { id: 3, label: "Copy Link", action: "copy_link" },
+  { id: 2, label: "Remove Project", action: "remove_project" },
 ];
 
 export function ProjectItem({ project }: { project: Project }) {
@@ -42,12 +45,18 @@ export function ProjectItem({ project }: { project: Project }) {
     sp.set(EDIT_PROJECT_MODAL_KEY, project.id);
     router.push(`?${sp.toString()}`);
   };
+
   const onRemoveProject = () => {
-    // TODO: implement remove project flow
+    const sp = new URLSearchParams(window.location.search);
+    sp.set(REMOVE_PROJECT_MODAL_KEY, project.id);
+    router.push(`?${sp.toString()}`);
   };
   const onCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText("holis");
+      const url = new URL(
+        `${window.location.origin}/o/${params["org-slug"]}/p/${project.name}`
+      ).toString();
+      await navigator.clipboard.writeText(url);
     } catch {
       return null;
     }
@@ -100,28 +109,63 @@ export function ProjectItem({ project }: { project: Project }) {
             className="w-52"
             side={isMobile ? "bottom" : "right"}
           >
-            {options.map((opt) => (
-              <DropdownMenuItem
+            {options.map((opt) => {
+              if (opt.action === "remove_project") {
+                return (
+                  <Fragment key={opt.id}>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-xs"
+                      key={opt.id}
+                      onSelect={handleAction[opt.action]}
+                      variant="destructive"
+                    >
+                      {opt.label}
+                    </DropdownMenuItem>
+                  </Fragment>
+                );
+              }
+
+              return (
+                <DropdownMenuItem
+                  className="text-xs"
+                  key={opt.id}
+                  onSelect={handleAction[opt.action]}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Forward the built project.href as string; TypedLink accepts route keys, so fall back to regular anchor semantics via 'as never' */}
+        <ContextMenuContent className="w-52">
+          {options.map((opt) => {
+            if (opt.action === "remove_project") {
+              return (
+                <Fragment key={opt.id}>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    className="text-xs"
+                    onSelect={handleAction[opt.action]}
+                    variant="destructive"
+                  >
+                    {opt.label}
+                  </ContextMenuItem>
+                </Fragment>
+              );
+            }
+
+            return (
+              <ContextMenuItem
                 className="text-xs"
                 key={opt.id}
                 onSelect={handleAction[opt.action]}
               >
                 {opt.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {/* Forward the built project.href as string; TypedLink accepts route keys, so fall back to regular anchor semantics via 'as never' */}
-        <ContextMenuContent className="w-52">
-          {options.map((opt) => (
-            <ContextMenuItem
-              className="text-xs"
-              key={opt.id}
-              onSelect={handleAction[opt.action]}
-            >
-              {opt.label}
-            </ContextMenuItem>
-          ))}
+              </ContextMenuItem>
+            );
+          })}
         </ContextMenuContent>
       </ContextMenu>
     </SidebarMenuItem>
