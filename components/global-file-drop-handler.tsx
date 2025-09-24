@@ -75,67 +75,74 @@ export function GlobalFileDropHandler({
     };
   }, [updateToast, autoRemoveToast]);
 
-  const startUpload = useCallback((file: File, project: Project) => {
-    const toastId = addToast(`Uploading ${file.name}...`, "pending", file.name);
+  const startUpload = useCallback(
+    (file: File, project: Project) => {
+      const toastId = addToast(
+        `Uploading ${file.name}...`,
+        "pending",
+        file.name
+      );
 
-    workerRef.current?.postMessage({
-      type: "START_UPLOAD",
-      payload: {
-        file,
-        projectId: project.id,
-        organizationId,
-        apiKey,
-        baseUrl,
-        toastId,
-      },
-    });
-  }, [addToast, organizationId, apiKey, baseUrl]);
+      workerRef.current?.postMessage({
+        type: "START_UPLOAD",
+        payload: {
+          file,
+          projectId: project.id,
+          organizationId,
+          apiKey,
+          baseUrl,
+          toastId,
+        },
+      });
+    },
+    [addToast, organizationId, apiKey, baseUrl]
+  );
 
-  const handleFilesDrop = useCallback(async (
-    files: File[],
-    droppedProject?: Project | null
-  ) => {
-    if (files.length > 1) {
-      addToast("Only one file at a time is allowed", "failed");
-      return;
-    }
-
-    const file = files[0];
-    if (!file) return;
-
-    try {
-      const validation = await validatePDFFile(file);
-      if (!validation.valid) {
-        addToast(validation.error?.message || "Invalid file", "failed");
+  const handleFilesDrop = useCallback(
+    async (files: File[], droppedProject?: Project | null) => {
+      if (files.length > 1) {
+        addToast("Only one file at a time is allowed", "failed");
         return;
       }
 
-      let projectToUse: Project | null = null;
+      const file = files[0];
+      if (!file) return;
 
-      if (droppedProject) {
-        if (currentProject && droppedProject.id !== currentProject.id) {
-          setTargetProject(droppedProject);
-          setPendingFile(file);
-          setShowCrossProjectConfirmation(true);
+      try {
+        const validation = await validatePDFFile(file);
+        if (!validation.valid) {
+          addToast(validation.error?.message || "Invalid file", "failed");
           return;
         }
-        projectToUse = droppedProject;
-      } else if (currentProject) {
-        projectToUse = currentProject;
-      } else {
-        setPendingFile(file);
-        setShowProjectSelector(true);
-        return;
-      }
 
-      if (projectToUse) {
-        startUpload(file, projectToUse);
+        let projectToUse: Project | null = null;
+
+        if (droppedProject) {
+          if (currentProject && droppedProject.id !== currentProject.id) {
+            setTargetProject(droppedProject);
+            setPendingFile(file);
+            setShowCrossProjectConfirmation(true);
+            return;
+          }
+          projectToUse = droppedProject;
+        } else if (currentProject) {
+          projectToUse = currentProject;
+        } else {
+          setPendingFile(file);
+          setShowProjectSelector(true);
+          return;
+        }
+
+        if (projectToUse) {
+          startUpload(file, projectToUse);
+        }
+      } catch (error) {
+        addToast("Error validating file", "failed");
+        console.error("File validation error:", error);
       }
-    } catch (error) {
-      addToast("Error validating file", "failed");
-      console.error("File validation error:", error);
-    }
-  }, [addToast, currentProject, startUpload]);
+    },
+    [addToast, currentProject, startUpload]
+  );
 
   // Global drag and drop handlers
   useEffect(() => {
@@ -225,14 +232,14 @@ export function GlobalFileDropHandler({
     <>
       {isDragging && (
         <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/20 backdrop-blur-sm"
           ref={dropZoneRef}
-          className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center"
           style={{ pointerEvents: "none" }}
         >
-          <div className="bg-background/90 backdrop-blur-sm border-2 border-dashed border-blue-500 rounded-lg p-8 text-center max-w-md">
-            <div className="text-6xl mb-4">📄</div>
-            <h3 className="text-lg font-semibold mb-2">Drop PDF File Here</h3>
-            <p className="text-sm text-muted-foreground">
+          <div className="max-w-md rounded-lg border-2 border-blue-500 border-dashed bg-background/90 p-8 text-center backdrop-blur-sm">
+            <div className="mb-4 text-6xl">📄</div>
+            <h3 className="mb-2 font-semibold text-lg">Drop PDF File Here</h3>
+            <p className="text-muted-foreground text-sm">
               {currentProject
                 ? `Upload to ${currentProject.name}`
                 : "Choose a project to upload to"}
@@ -242,6 +249,7 @@ export function GlobalFileDropHandler({
       )}
 
       <ProjectSelectorDialog
+        filename={pendingFile?.name || ""}
         isOpen={showProjectSelector}
         onClose={() => {
           setShowProjectSelector(false);
@@ -249,11 +257,12 @@ export function GlobalFileDropHandler({
         }}
         onSelectProject={handleProjectSelection}
         projects={projects}
-        filename={pendingFile?.name || ""}
       />
 
       {targetProject && currentProject && (
         <CrossProjectConfirmation
+          currentProject={currentProject}
+          filename={pendingFile?.name || ""}
           isOpen={showCrossProjectConfirmation}
           onClose={() => {
             setShowCrossProjectConfirmation(false);
@@ -262,8 +271,6 @@ export function GlobalFileDropHandler({
           }}
           onConfirm={handleCrossProjectConfirmation}
           targetProject={targetProject}
-          currentProject={currentProject}
-          filename={pendingFile?.name || ""}
         />
       )}
     </>

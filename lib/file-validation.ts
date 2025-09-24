@@ -2,7 +2,7 @@
  * File validation utilities for PDF upload
  */
 
-export type FileValidationError = {
+export interface FileValidationError {
   code:
     | "INVALID_TYPE"
     | "TOO_LARGE"
@@ -10,15 +10,19 @@ export type FileValidationError = {
     | "PASSWORD_PROTECTED"
     | "INVALID_PDF";
   message: string;
-};
+}
 
-export type FileValidationResult = {
+export interface FileValidationResult {
   valid: boolean;
   error?: FileValidationError;
-};
+}
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const BYTES_IN_KB = 1024;
+const BYTES_IN_MB = BYTES_IN_KB * BYTES_IN_KB;
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * BYTES_IN_MB; // 5MB in bytes
 const ALLOWED_TYPE = "application/pdf";
+const PDF_HEADER_CHECK_SIZE = 1024;
 
 /**
  * Validates a single file for PDF upload requirements
@@ -41,7 +45,7 @@ export function validateFile(file: File): FileValidationResult {
       valid: false,
       error: {
         code: "TOO_LARGE",
-        message: `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        message: `File size must be less than ${MAX_FILE_SIZE_MB}MB`,
       },
     };
   }
@@ -90,8 +94,10 @@ export async function checkPDFPasswordProtection(file: File): Promise<boolean> {
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
 
-    // Convert first 1024 bytes to string to check for encryption markers
-    const header = String.fromCharCode(...uint8Array.slice(0, 1024));
+    // Convert first bytes to string to check for encryption markers
+    const header = String.fromCharCode(
+      ...uint8Array.slice(0, PDF_HEADER_CHECK_SIZE)
+    );
 
     // Basic check for encryption/password protection indicators
     // This is a simplified check - real implementation might need PDF parsing
@@ -102,7 +108,7 @@ export async function checkPDFPasswordProtection(file: File): Promise<boolean> {
       header.includes("/O ");
 
     return hasEncryption;
-  } catch (_error) {
+  } catch (error) {
     // If we can't read the file, assume it might be protected
     return true;
   }
@@ -132,7 +138,7 @@ export async function validatePDFFile(
         },
       };
     }
-  } catch (_error) {
+  } catch (error) {
     return {
       valid: false,
       error: {
