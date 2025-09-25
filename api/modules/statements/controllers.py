@@ -79,7 +79,7 @@ async def upload_statement(
                 project_id=project_id,
                 organization_id=organization_id,
             )
-            return {"status": "success", "message": "Statements uploaded"}
+        return {"status": "success", "message": "Statements uploaded"}
     except ProjectNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
