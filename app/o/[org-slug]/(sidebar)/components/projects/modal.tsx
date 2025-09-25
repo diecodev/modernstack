@@ -21,6 +21,7 @@ export const NewProjectModal = ({
   const router = useRouter();
   const params = useSearchParams();
   const dynamicParams = useParams<{ "org-slug": string; name?: string }>();
+  const parsedName = decodeURIComponent(dynamicParams?.name || "");
 
   const newProjectParam = params.get(NEW_PROJECT_MODAL_KEY);
   const isNewProjectParamValid = newProjectParam === NEW_PROJECT_MODAL_VALUE;
@@ -50,8 +51,9 @@ export const NewProjectModal = ({
 
   const onSuccess = (proj: Project) => {
     // If currently viewing the same project path, force a navigation to new slug
-    if (projects.find((p) => p.name === dynamicParams?.name)?.id === proj.id) {
-      document.location.href = `/o/${dynamicParams["org-slug"]}/p/${proj.name}`;
+    if (projects.find((p) => p.name === parsedName)?.id === proj.id) {
+      const url = `/o/${dynamicParams["org-slug"]}/p/${proj.name.toLowerCase()}`;
+      document.location.href = url;
       return;
     }
     router.refresh();
