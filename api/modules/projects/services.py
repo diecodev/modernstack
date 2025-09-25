@@ -35,7 +35,6 @@ class ProjectService:
     async def get_by_id(self, id: PydanticObjectId, organization_id: str) -> Project:
         project = await Project.find_one(
             And(Project.id == id, Project.organization_id == organization_id),
-            fetch_links=True,
         )
         if not project:
             raise ProjectNotFoundException

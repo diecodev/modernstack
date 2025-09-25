@@ -5,7 +5,6 @@ from modules.projects.schemas import (
     ProjectCreate,
     ProjectResponse,
     ProjectUpdate,
-    ProjectWithStatementsResponse,
 )
 from modules.projects.exceptions import (
     ProjectAlreadyExistsException,
@@ -48,7 +47,7 @@ async def get_project(
     project_id: PydanticObjectId,
     services: ServiceDep,
     organization_id: OrganizationIdDep,
-) -> ProjectWithStatementsResponse:
+) -> ProjectResponse:
     try:
         return await services.projects.get_by_id(
             id=project_id, organization_id=organization_id
