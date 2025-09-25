@@ -1,6 +1,7 @@
 from beanie import PydanticObjectId
 from fastapi import (
     APIRouter,
+    Header,
     UploadFile,
     HTTPException,
     status,
@@ -294,6 +295,7 @@ async def create_statement(
     services: ServiceDep,
     project_id: PydanticObjectId,
     organization_id: OrganizationIdDep,
+    user_id: Header(..., alias="X-User-Id"),
 ) -> dict:
     try:
         project = await services.projects.get_by_id(
@@ -315,7 +317,7 @@ async def create_statement(
             ),
         )
         status, current_balance, previous_balance = await services.statements.create(
-            statement=statement, file_content=file_content
+            statement=statement, file_content=file_content, user_id=user_id
         )
         if status == StatementStatus.FAILED:
             await services.statements.update(

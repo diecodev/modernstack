@@ -346,6 +346,7 @@ class StatementService:
         request: Request,
         project_id: str,
         organization_id: str,
+        user_id: str,
     ) -> None:
         host = request.headers.get("host")
         url = f"{'http' if host.startswith('localhost') else 'https'}://{host}/projects/{project_id}/statements/{statement.id}"
@@ -358,7 +359,7 @@ class StatementService:
                 "X-Api-Key": settings.api_key,
                 "X-Organization-Id": organization_id,
             },
-            flow_control=FlowControl(parallelism=3),
+            flow_control=FlowControl(parallelism=3, user_id=user_id),
         )
 
     async def status_event(self, statement_id: str, request: Request):
@@ -386,3 +387,10 @@ class StatementService:
         )
         await Transaction.find(Transaction.statement.id == statement.id).delete()
         await statement.delete()
+
+    async def delete_all(
+        self,
+        project_id: PydanticObjectId,
+    ) -> None:
+        await Transaction.find(Transaction.statement.project.id == project_id).delete()
+        await Statement.find(Statement.project.id == project_id).delete()

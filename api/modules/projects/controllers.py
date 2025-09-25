@@ -88,9 +88,10 @@ async def delete_project(
     organization_id: OrganizationIdDep,
 ):
     try:
-        return await services.projects.delete(
-            id=project_id, organization_id=organization_id
+        await services.statements.delete_all(
+            project_id=project_id,
         )
+        await services.projects.delete(id=project_id, organization_id=organization_id)
     except ProjectNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"

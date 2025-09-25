@@ -11,7 +11,6 @@ from modules.projects.exceptions import (
 )
 from modules.projects.models import Project
 from modules.projects.schemas import ProjectCreate, ProjectUpdate
-from modules.statements.models import Statement
 
 
 class ProjectService:
@@ -67,5 +66,4 @@ class ProjectService:
 
     async def delete(self, id: PydanticObjectId, organization_id: str) -> None:
         project = await self.get_by_id(id=id, organization_id=organization_id)
-        await Statement.find(Statement.project.id == project.id).delete()
         await project.delete()
