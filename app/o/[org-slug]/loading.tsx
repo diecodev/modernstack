@@ -3,7 +3,6 @@ import {
   SidebarInset,
   SidebarMenuSkeleton,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/animate-ui/components/radix/sidebar";
 
 export default function Loading() {
@@ -13,9 +12,7 @@ export default function Loading() {
         <SidebarMenuSkeleton className="h-10" />
       </Sidebar>
       <SidebarInset>
-        <main>
-          <SidebarTrigger />
-        </main>
+        <main />
       </SidebarInset>
     </SidebarProvider>
   );
