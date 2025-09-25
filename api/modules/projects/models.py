@@ -31,10 +31,3 @@ class Project(Document):
                 collation={"locale": "en", "strength": 2},
             )
         ]
-
-    async def delete(self, *args, **kwargs):
-        await self.fetch_link(Project.statements)
-        if self.statements:
-            for statement in self.statements:
-                await statement.delete()
-        return await super().delete(*args, **kwargs)
