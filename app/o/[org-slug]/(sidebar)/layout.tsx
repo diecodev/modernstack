@@ -1,7 +1,6 @@
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/animate-ui/components/radix/sidebar";
 import { AppSidebar } from "./components/sidebar";
 
@@ -14,10 +13,7 @@ export default function OrganizationLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <main>
-          <SidebarTrigger />
-          {children}
-        </main>
+        <main>{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

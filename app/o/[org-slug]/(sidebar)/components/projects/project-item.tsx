@@ -40,6 +40,8 @@ export function ProjectItem({ project }: { project: Project }) {
   const isMobile = useIsMobile();
   const router = useRouter();
 
+  const parsedName = decodeURIComponent(params.name || "").toLowerCase();
+
   const onEditProject = () => {
     const sp = new URLSearchParams(window.location.search);
     sp.set(EDIT_PROJECT_MODAL_KEY, project.id);
@@ -73,13 +75,16 @@ export function ProjectItem({ project }: { project: Project }) {
       <ContextMenu>
         <SidebarMenuButton
           asChild
-          isActive={params.name === project.name}
+          isActive={parsedName === project.name.toLowerCase()}
           size="sm"
         >
           <ContextMenuTrigger asChild>
             <TypedLink
               href="/o/[org-slug]/p/[name]"
-              params={{ name: project.name, "org-slug": params["org-slug"] }}
+              params={{
+                name: project.name.toLowerCase(),
+                "org-slug": params["org-slug"],
+              }}
             >
               <div
                 className="rounded-sm bg-[color:var(--project-color-bg)] p-[3px] text-[color:var(--project-color)]"
