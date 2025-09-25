@@ -116,13 +116,18 @@ async def list_statements(
     limit: int = Query(10, ge=1),
     offset: int = Query(0, ge=0),
     search: str | None = Query(default=None),
+    statement_status: StatementStatus | None = Query(default=None, alias="status"),
 ) -> StatementsPaginatedResponse:
     try:
         project = await services.projects.get_by_id(
             project_id, organization_id=organization_id
         )
         statements, total = await services.statements.list_paginated(
-            project_id=project.id, limit=limit, offset=offset, search=search
+            project_id=project.id,
+            limit=limit,
+            offset=offset,
+            search=search,
+            status=statement_status,
         )
         return {"statements": statements, "total": total}
     except ProjectNotFoundException:

@@ -198,11 +198,14 @@ class StatementService:
         limit: int = 10,
         offset: int = 0,
         search: Optional[str] = None,
+        status: Optional[StatementStatus] = None,
     ) -> tuple[List[Statement], int]:
         filters = [Statement.project.id == project_id]
         if search:
             pattern = re.compile(re.escape(search), re.IGNORECASE)
             filters.append(Statement.name == pattern)
+        if status:
+            filters.append(Statement.status == status.value)
 
         query = Statement.find(And(*filters))
         total = await query.count()
