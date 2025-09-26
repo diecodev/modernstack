@@ -295,7 +295,7 @@ async def create_statement(
     services: ServiceDep,
     project_id: PydanticObjectId,
     organization_id: OrganizationIdDep,
-    user_id: Header(..., alias="X-User-Id"),
+    user_id: str = Header(..., alias="X-User-Id"),
 ) -> dict:
     try:
         project = await services.projects.get_by_id(
