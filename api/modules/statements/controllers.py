@@ -35,6 +35,7 @@ async def upload_statement(
     organization_id: OrganizationIdDep,
     files: list[UploadFile],
     request: Request,
+    user_id: str = Header(..., alias="X-User-Id"),
 ) -> dict:
     try:
         if len(files) > 12:
@@ -79,6 +80,7 @@ async def upload_statement(
                 request=request,
                 project_id=project_id,
                 organization_id=organization_id,
+                user_id=user_id,
             )
         return {"status": "success", "message": "Statements uploaded"}
     except ProjectNotFoundException:
@@ -295,7 +297,6 @@ async def create_statement(
     services: ServiceDep,
     project_id: PydanticObjectId,
     organization_id: OrganizationIdDep,
-    user_id: str = Header(..., alias="X-User-Id"),
 ) -> dict:
     try:
         project = await services.projects.get_by_id(
@@ -317,7 +318,7 @@ async def create_statement(
             ),
         )
         status, current_balance, previous_balance = await services.statements.create(
-            statement=statement, file_content=file_content, user_id=user_id
+            statement=statement, file_content=file_content
         )
         if status == StatementStatus.FAILED:
             await services.statements.update(
