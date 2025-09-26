@@ -359,7 +359,7 @@ class StatementService:
                 "X-Api-Key": settings.api_key,
                 "X-Organization-Id": organization_id,
             },
-            flow_control=FlowControl(parallelism=3, user_id=user_id),
+            flow_control=FlowControl(parallelism=3, key=user_id),
         )
 
     async def status_event(self, statement_id: str, request: Request):
